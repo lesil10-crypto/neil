@@ -1,0 +1,21 @@
+{
+  "name": "ai-vocabulary-builder",
+  "version": "1.0.0",
+  "description": "An AI-powered vocabulary builder web application that provides comprehensive information about English words.",
+  "main": "index.html",
+  "scripts": {
+    "start": "serve"
+  },
+  "keywords": [
+    "ai",
+    "vocabulary",
+    "english",
+    "learning",
+    "gemini"
+  ],
+  "author": "Gemini",
+  "license": "ISC",
+  "devDependencies": {
+    "serve": "^14.2.1"
+  }
+}
