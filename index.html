@@ -11,13 +11,14 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 
-    <script src="https://cdn.jsdelivr.net/npm/lucide-icons@0.378.0/dist/lucide.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
         /* Noto Sans KR font global application */
         body {
             font-family: 'Noto Sans KR', sans-serif;
-            background-color: #e0e5ec; /* Updated background color for neumorphism */
+            background-color: #e0e5ec; /* Neumorphism background */
             color: #4a5568; /* Default text color */
         }
 
@@ -26,10 +27,10 @@
             text-shadow: 1px 1px 1px #ffffff, -1px -1px 1px #c5c9d2;
         }
         input, select, textarea {
-            text-shadow: none; /* Input fields should not have text shadow for readability */
+            text-shadow: none;
             background-color: #e0e5ec;
         }
-        .prose p, .prose li { /* Reset for long-form text to improve readability */
+        .prose p, .prose li {
             text-shadow: none;
         }
         /* --- END --- */
@@ -45,17 +46,20 @@
             box-shadow: 6px 6px 12px #c5c9d2, -6px -6px 12px #fdffff;
             transition: all 0.2s ease-in-out;
             outline: none;
-            text-shadow: 1px 1px 1px #ffffff, -1px -1px 1px #c5c9d2; /* Button text texture */
+            text-shadow: 1px 1px 1px #ffffff, -1px -1px 1px #c5c9d2;
+            cursor: pointer;
         }
 
         .btn-3d:hover {
             box-shadow: 4px 4px 8px #c5c9d2, -4px -4px 8px #fdffff;
+            transform: translateY(-1px);
         }
 
         .btn-3d:disabled {
             opacity: 0.6;
             cursor: not-allowed;
             box-shadow: inset 2px 2px 4px #c5c9d2, inset -2px -2px 4px #fdffff;
+            transform: none;
         }
 
         .btn-3d:active {
@@ -77,7 +81,7 @@
             color: #2b6cb0;
             transition: color 0.2s;
             border-bottom: 1px dotted #2b6cb0;
-            text-shadow: none; /* Clickable words should be clear */
+            text-shadow: none;
         }
         .clickable-word:hover {
             color: #2c5282;
@@ -86,11 +90,11 @@
 
         /* Loading spinner */
         .loader {
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #3498db;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
+            width: 40px;
+            height: 40px;
             animation: spin 1s linear infinite;
         }
         @keyframes spin {
@@ -108,6 +112,7 @@
             visibility: hidden;
             opacity: 0;
             transition: opacity 0.5s, visibility 0.5s, bottom 0.5s;
+            z-index: 9999;
         }
         .toast.show {
             visibility: visible;
@@ -119,7 +124,7 @@
             transition: transform 0.2s ease-in-out;
         }
         .clickable-image:hover {
-            transform: scale(1.03);
+            transform: scale(1.02);
         }
 
         /* Icon Button Base Style (Circular Neumorphism) */
@@ -127,14 +132,16 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 2.25rem; /* 36px */
-            height: 2.25rem; /* 36px */
+            width: 2.5rem;
+            height: 2.5rem;
             border-radius: 9999px;
             background-color: #e2e8f0;
             transition: all 0.2s;
             color: #4a5568;
             box-shadow: 3px 3px 6px #c5c9d2, -3px -3px 6px #fdffff;
-            position: relative; /* For tooltip positioning */
+            position: relative;
+            border: none;
+            cursor: pointer;
         }
         .icon-btn:hover {
             color: #1a202c;
@@ -144,8 +151,7 @@
             box-shadow: inset 2px 2px 4px #c5c9d2, inset -2px -2px 4px #fdffff;
         }
 
-        /* Icon SVG Styling - Adding Neumorphism Texture to the Icon Path itself */
-        .icon-btn svg path, .icon-btn svg circle, .icon-btn svg polygon {
+        .icon-btn svg {
             filter: drop-shadow(1px 1px 1px rgba(255, 255, 255, 0.7)) drop-shadow(-1px -1px 1px rgba(0, 0, 0, 0.2));
             transition: filter 0.2s;
         }
@@ -161,13 +167,14 @@
             padding: 5px 10px;
             position: absolute;
             z-index: 10;
-            bottom: 125%; /* Position above the button */
+            bottom: 125%;
             left: 50%;
             transform: translateX(-50%);
             transition: opacity 0.2s;
             white-space: nowrap;
             font-size: 0.75rem;
-            text-shadow: none; /* Tooltip text should be clear */
+            text-shadow: none;
+            pointer-events: none;
         }
 
         .icon-btn:hover .tooltip {
@@ -175,7 +182,7 @@
             opacity: 1;
         }
 
-        /* Print-specific styles for better output (FIXED) */
+        /* Print-specific styles */
         @media print {
             body {
                 background-color: #fff !important;
@@ -183,27 +190,17 @@
                 margin: 0;
                 padding: 0;
             }
-
-            /* 모든 주요 UI와 컨테이너를 숨기고, print-container만 보이게 함 */
-            #app-container,
-            #search-bar-container,
-            #shortcut-buttons,
-            #loading-container,
-            #tab-bar,
-            footer,
-            .modal, .toast, .tooltip, #auth-container, #confirmation-modal, #password-modal {
+            #app-container, #search-bar-container, #shortcut-buttons, #loading-container,
+            #tab-bar, footer, .modal, .toast, .tooltip, #auth-container, #confirmation-modal, #password-modal,
+            #google-calendar {
                 display: none !important;
             }
-
-            /* print-container만 인쇄 영역에 표시 */
             #print-container {
                 display: block !important;
                 width: 100%;
                 margin: 0 auto;
-                padding: 0 1cm; /* 여백 추가 */
+                padding: 0 1cm;
             }
-
-            /* 인쇄 헤더 (제목) */
             .print-header {
                 display: block !important;
                 text-align: center;
@@ -216,29 +213,22 @@
                 color: #000;
                 text-shadow: none;
             }
-
-            /* 카드 스타일 리셋 */
             .card {
                 box-shadow: none;
                 border: 1px solid #ccc;
                 background-color: #fff !important;
                 margin-bottom: 1.5rem;
                 padding: 10px !important;
+                break-inside: avoid;
             }
-
-            /* 이미지 처리 */
             img {
                 max-width: 100%;
                 height: auto;
-                page-break-inside: avoid;
+                break-inside: avoid;
             }
-
-            /* 인쇄 전용 콘텐츠에만 텍스트 섀도우 제거 */
             #print-container * {
                 text-shadow: none !important;
             }
-            
-            /* 인쇄 시 버튼 숨기기 */
             .btn-3d, .icon-btn, #pronunciation-btn {
                 display: none !important;
             }
@@ -248,10 +238,10 @@
 <body class="bg-slate-100 text-gray-800">
 
     <div id="auth-container" class="fixed inset-0 bg-slate-100 z-[100] flex items-center justify-center hidden">
-        <div class="card p-8 text-center">
+        <div class="card p-8 text-center max-w-md w-full mx-4">
             <h2 class="text-2xl font-bold mb-4">로그인이 필요합니다</h2>
             <p class="mb-6 text-gray-600">모든 기능을 사용하려면 Google 계정으로 로그인하세요.</p>
-            <button id="google-login-btn" class="btn-3d !bg-blue-500 !text-white hover:!bg-blue-600 flex items-center justify-center w-full" onclick="signInWithGoogle()">
+            <button id="google-login-btn" class="btn-3d !bg-blue-500 !text-white hover:!bg-blue-600 flex items-center justify-center w-full">
                 <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><defs><path id="a" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/></defs><clipPath id="b"><use xlink:href="#a" overflow="visible"/></clipPath><path clip-path="url(#b)" fill="#FBBC05" d="M0 37V11l17 13z"/><path clip-path="url(#b)" fill="#EA4335" d="M0 11l17 13 7-6.1L48 14V0H0z"/><path clip-path="url(#b)" fill="#34A853" d="M0 37l30-23 7.9 1L48 0v48H0z"/><path clip-path="url(#b)" fill="#4285F4" d="M48 48L17 24l-4-3 35-10z"/></svg>
                 Google 계정으로 로그인
             </button>
@@ -270,7 +260,7 @@
                 </div>
             </header>
 
-            <div id="search-bar-container" class="card p-6 mb-8 sticky top-4 z-10">
+            <div id="search-bar-container" class="card p-6 mb-8 sticky top-4 z-40">
                 <div class="flex flex-col sm:flex-row gap-4">
                     <input
                         type="text"
@@ -279,52 +269,44 @@
                         class="w-full px-4 py-3 text-lg border-2 border-slate-300 bg-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition cursor-pointer disabled:cursor-not-allowed"
                         disabled 
                     >
-                    <button id="search-button" class="btn-3d w-full sm:w-auto" onclick="checkSearchAccess()">
+                    <button id="search-button" class="btn-3d w-full sm:w-auto">
                         <i data-lucide="search" class="inline-block mr-2"></i> 검색
                     </button>
                 </div>
             </div>
 
             <div id="shortcut-buttons" class="card p-4 grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
-                <a href="https://www.naver.com" target="_blank" class="btn-3d flex flex-col items-center justify-center p-3 text-green-600 !p-2 !text-sm">
-                    <svg class="w-6 h-6 mb-1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="2" y="2" width="20" height="20" rx="4" fill="#03C75A"/>
-                        <path d="M12 7V17M12 7L10 9M12 7L14 9M10 17H14" stroke="#e0e5ec" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <circle cx="12" cy="12" r="11" fill="none" stroke="#03C75A" stroke-width="2"/>
-                    </svg>
-                    네이버
+                <a href="https://www.naver.com" target="_blank" class="btn-3d flex flex-col items-center justify-center p-3 !text-sm text-green-600">
+                    <span class="mb-1 font-bold">N</span> 네이버
                 </a>
-                <a href="https://www.google.com" target="_blank" class="btn-3d flex flex-col items-center justify-center p-3 text-blue-600 !p-2 !text-sm">
-                    <i data-lucide="globe-2" class="w-5 h-5 mb-1 text-blue-500" style="text-shadow: 1px 1px 1px #e0e5ec, -1px -1px 1px #c5c9d2;"></i>
-                    Google
+                <a href="https://www.google.com" target="_blank" class="btn-3d flex flex-col items-center justify-center p-3 !text-sm text-blue-600">
+                    <i data-lucide="globe-2" class="w-5 h-5 mb-1"></i> Google
                 </a>
-                <a href="https://www.youtube.com" target="_blank" class="btn-3d flex flex-col items-center justify-center p-3 text-red-600 !p-2 !text-sm">
-                    <i data-lucide="youtube" class="w-5 h-5 mb-1 text-red-600" style="text-shadow: 1px 1px 1px #e0e5ec, -1px -1px 1px #c5c9d2;"></i>
-                    YouTube
+                <a href="https://www.youtube.com" target="_blank" class="btn-3d flex flex-col items-center justify-center p-3 !text-sm text-red-600">
+                    <i data-lucide="youtube" class="w-5 h-5 mb-1"></i> YouTube
                 </a>
-                <a href="https://www.clien.net" target="_blank" class="btn-3d flex flex-col items-center justify-center p-3 text-gray-700 !p-2 !text-sm">
-                    <i data-lucide="message-square" class="w-5 h-5 mb-1 text-blue-900" style="text-shadow: 1px 1px 1px #e0e5ec, -1px -1px 1px #c5c9d2;"></i>
-                    Clien
+                <a href="https://www.clien.net" target="_blank" class="btn-3d flex flex-col items-center justify-center p-3 !text-sm text-gray-700">
+                    <i data-lucide="message-square" class="w-5 h-5 mb-1"></i> Clien
                 </a>
-                <a href="https://gemini.google.com/" target="_blank" class="btn-3d flex flex-col items-center justify-center p-3 text-purple-600 !p-2 !text-sm">
-                    <i data-lucide="sparkles" class="w-5 h-5 mb-1 text-purple-500" style="text-shadow: 1px 1px 1px #e0e5ec, -1px -1px 1px #c5c9d2;"></i>
-                    Gemini
+                <a href="https://gemini.google.com/" target="_blank" class="btn-3d flex flex-col items-center justify-center p-3 !text-sm text-purple-600">
+                    <i data-lucide="sparkles" class="w-5 h-5 mb-1"></i> Gemini
                 </a>
             </div>
+
             <div id="google-calendar" class="card p-6">
                 <h3 class="text-2xl font-bold mb-4 flex items-center text-blue-700">
-                    <i data-lucide="calendar" class="mr-2 text-blue-500"></i>Google 캘린더
+                    <i data-lucide="calendar" class="mr-2"></i>Google 캘린더
                 </h3>
                 <div class="w-full h-[600px] rounded-lg overflow-hidden border-2 border-slate-200">
-                     <iframe src="https://calendar.google.com/calendar/embed?height=600&wkst=1&ctz=Asia%2FSeoul&showPrint=0&src=bGVzaWwxMEBnbWFpbC5jb20&src=aGs2Y2Qzb2ZoYmc3NHRuajA2cjFzNGUxaWNAZ3JvdXAuY2FsZW5kYXIuZ29vZ2xlLmNvbQ&src=a28uc291dGhfa29yZWEjaG9saWRheUBncm91cC52LmNhbGVuZGFyLmdvb2dsZS5jb20&color=%23e67c73&color=%238e24aa&color=%237986cb" style="border:solid 1px #777" width="100%" height="100%" frameborder="0" scrolling="no"></iframe>
+                     <iframe src="https://calendar.google.com/calendar/embed?height=600&wkst=1&ctz=Asia%2FSeoul&showPrint=0&src=aGs2Y2Qzb2ZoYmc3NHRuajA2cjFzNGUxaWNAZ3JvdXAuY2FsZW5kYXIuZ29vZ2xlLmNvbQ&src=a28uc291dGhfa29yZWEjaG9saWRheUBncm91cC52LmNhbGVuZGFyLmdvb2dsZS5jb20&color=%23e67c73&color=%238e24aa&color=%237986cb" style="border:solid 1px #777" width="100%" height="100%" frameborder="0" scrolling="no"></iframe>
                 </div>
             </div>
 
             <div id="loading-container" class="hidden text-center my-10">
                 <div class="loader mx-auto"></div>
                 <p id="loading-text" class="mt-4 text-gray-600 font-semibold"></p>
-                <div class="w-full bg-gray-200 rounded-full h-2.5 mt-2">
-                    <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+                <div class="w-full bg-gray-200 rounded-full h-2.5 mt-2 overflow-hidden">
+                    <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
                 </div>
             </div>
 
@@ -357,6 +339,7 @@
         </footer>
     </div>
 
+    <!-- Modals -->
     <div id="modal-container" class="fixed inset-0 bg-black bg-opacity-60 hidden items-center justify-center p-4 z-50 modal" onclick="hideModal(event)">
         <div id="modal-content" class="bg-slate-100 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-8 card !mb-0" onclick="event.stopPropagation()"></div>
     </div>
@@ -436,6 +419,7 @@
         </div>
       </div>
     </div>
+
     <div id="toast-container" class="toast fixed bottom-24 right-5 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg">
         <p id="toast-message"></p>
     </div>
@@ -454,13 +438,13 @@
     <!-- MAIN SCRIPT -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, addDoc, writeBatch, query, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject, uploadBytes } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
         // === Updated Firebase Config ===
         const USER_FIREBASE_CONFIG = {
-            apiKey: "AIzaSyC-UisM1j624UWaQESMGCtYAuvkimpjBI8", // New Key Updated
+            apiKey: "AIzaSyC-UisM1j624UWaQESMGCtYAuvkimpjBI8",
             authDomain: "projec-48c55.firebaseapp.com",
             projectId: "projec-48c55",
             storageBucket: "projec-48c55.appspot.com",
@@ -481,12 +465,9 @@
             currentChoicePageData;
 
         // Gemini API Configuration
-        const GOOGLE_API_KEY = "AIzaSyC-UisM1j624UWaQESMGCtYAuvkimpjBI8"; // Using the updated key directly
+        const GOOGLE_API_KEY = ""; // Set by environment or user if running locally
         const TEXT_MODEL = "gemini-2.5-flash-preview-09-2025";
-        const IMAGE_MODEL = "imagen-3.0-generate-001"; // Fallback if Nano Banana (Gemini 2.5 Flash Image Preview) isn't standard for gen yet, but we will try to label it.
-        // NOTE: User requested "Google Nano Banana". This maps to gemini-2.5-flash-image-preview. 
-        // We will use the imagen-3.0-generate-001 endpoint as it's the stable image generator in this environment, 
-        // effectively replacing the previous Pollinations logic.
+        const IMAGE_MODEL = "imagen-4.0-generate-001"; // Updated to 4.0
 
         const translationCache = {};
 
@@ -503,13 +484,13 @@
         let savedSentences = [];
 
         // =========================================================================
-        // === 1. 이미지 생성 함수 (Google Nano Banana / Imagen 적용) ===
+        // === 1. 이미지 생성 함수 (Google Imagen 4.0) ===
         // =========================================================================
 
         async function callImagenWithRetry(prompt, retries = 3) {
             try {
-                // Google Imagen API Endpoint
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${GOOGLE_API_KEY}`;
+                // Google Imagen API Endpoint (4.0)
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${IMAGE_MODEL}:predict?key=${GOOGLE_API_KEY}`;
                 
                 const payload = {
                     instances: [
@@ -790,7 +771,19 @@
             searchChoiceCancelBtn = document.getElementById('search-choice-cancel-btn');
             currentChoicePageData = null;
 
-            const firebaseConfig = USER_FIREBASE_CONFIG;
+            // Prioritize environment config if available to avoid domain blocking issues
+            let firebaseConfig;
+            if (typeof __firebase_config !== 'undefined') {
+                try {
+                    firebaseConfig = JSON.parse(__firebase_config);
+                } catch (e) {
+                    console.warn("Failed to parse __firebase_config, using user config", e);
+                    firebaseConfig = USER_FIREBASE_CONFIG;
+                }
+            } else {
+                firebaseConfig = USER_FIREBASE_CONFIG;
+            }
+
             try {
                 if (!firebaseConfig.apiKey) {
                     console.error("Firebase config is missing.");
@@ -801,13 +794,40 @@
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
-                storage = getStorage(app,"gs://projec-48c55.firebasestorage.app");
+                storage = getStorage(app, firebaseConfig.storageBucket ? `gs://${firebaseConfig.storageBucket}` : undefined);
                 setLogLevel('debug'); 
                 
-            onAuthStateChanged(auth, (user) => {
+                // Robust Auth Flow
+                const initAuth = async () => {
+                    try {
+                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                            await signInWithCustomToken(auth, __initial_auth_token);
+                        } else {
+                            // If no custom token, try anonymous sign-in implicitly or wait for user action
+                            // The prompt says "Auth Before Queries". 
+                            // If we rely on Google Sign In popup, we might not need signInAnonymously immediately 
+                            // unless we want to allow public read access or user-specific data via anonymous uid.
+                            // Given the app structure relies on `userId`, we should probably sign in anonymously if no user.
+                            await signInAnonymously(auth);
+                        }
+                    } catch (error) {
+                        console.error("Auto-sign-in failed:", error);
+                        // Fallback to anonymous if custom token failed
+                        try {
+                            await signInAnonymously(auth);
+                        } catch (anonError) {
+                            console.error("Anonymous fallback failed:", anonError);
+                            // showToast("로그인 초기화에 실패했습니다. 수동 로그인을 시도해주세요.", "error");
+                        }
+                    }
+                };
+
+                await initAuth();
+
+                onAuthStateChanged(auth, (user) => {
                     if (user) {
                         userId = user.uid;
-                        console.log("Authenticated with Google. User ID:", userId);
+                        console.log("Authenticated. User ID:", userId);
                         document.getElementById('auth-status').innerHTML = `
                             <span class="text-sm">환영합니다, ${user.displayName || '사용자'}님</span>
                             <button id="google-logout-btn" class="btn-3d !p-2 !text-xs !bg-red-400 !text-white hover:!bg-red-500">로그아웃</button>
@@ -944,6 +964,9 @@
             markReadBtn.addEventListener('click', () => performBulkAction('mark-read'));
             markUnreadBtn.addEventListener('click', () => performBulkAction('mark-unread')); 
             deleteSelectedBtn.addEventListener('click', () => performBulkAction('delete'));
+            
+            // Authentication Button
+            document.getElementById('google-login-btn').addEventListener('click', signInWithGoogle);
 
         } 
 
