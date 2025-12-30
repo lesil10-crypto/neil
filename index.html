@@ -239,11 +239,14 @@
 
     <div id="auth-container" class="fixed inset-0 bg-slate-100 z-[100] flex items-center justify-center hidden">
         <div class="card p-8 text-center max-w-md w-full mx-4">
-            <h2 class="text-2xl font-bold mb-4">로그인이 필요합니다</h2>
+            <h2 class="text-2xl font-bold mb-4">로그인</h2>
             <p class="mb-6 text-gray-600">모든 기능을 사용하려면 Google 계정으로 로그인하세요.</p>
-            <button id="google-login-btn" class="btn-3d !bg-blue-500 !text-white hover:!bg-blue-600 flex items-center justify-center w-full">
+            <button id="google-login-btn" class="btn-3d !bg-blue-500 !text-white hover:!bg-blue-600 flex items-center justify-center w-full mb-4">
                 <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><defs><path id="a" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/></defs><clipPath id="b"><use xlink:href="#a" overflow="visible"/></clipPath><path clip-path="url(#b)" fill="#FBBC05" d="M0 37V11l17 13z"/><path clip-path="url(#b)" fill="#EA4335" d="M0 11l17 13 7-6.1L48 14V0H0z"/><path clip-path="url(#b)" fill="#34A853" d="M0 37l30-23 7.9 1L48 0v48H0z"/><path clip-path="url(#b)" fill="#4285F4" d="M48 48L17 24l-4-3 35-10z"/></svg>
                 Google 계정으로 로그인
+            </button>
+            <button id="guest-mode-btn" class="btn-3d flex items-center justify-center w-full !text-gray-600">
+                로그인 없이 시작하기 (게스트 모드)
             </button>
         </div>
     </div>
@@ -265,9 +268,8 @@
                     <input
                         type="text"
                         id="search-input"
-                        placeholder="Google 로그인이 필요합니다..."
-                        class="w-full px-4 py-3 text-lg border-2 border-slate-300 bg-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition cursor-pointer disabled:cursor-not-allowed"
-                        disabled 
+                        placeholder="영단어 또는 한글 뜻을 입력하세요..."
+                        class="w-full px-4 py-3 text-lg border-2 border-slate-300 bg-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition cursor-pointer"
                     >
                     <button id="search-button" class="btn-3d w-full sm:w-auto">
                         <i data-lucide="search" class="inline-block mr-2"></i> 검색
@@ -795,7 +797,7 @@
                 db = getFirestore(app);
                 auth = getAuth(app);
                 storage = getStorage(app, firebaseConfig.storageBucket ? `gs://${firebaseConfig.storageBucket}` : undefined);
-                setLogLevel('debug'); 
+                setLogLevel('silent'); // Suppress verbose logs to reduce console noise
                 
                 // Robust Auth Flow
                 const initAuth = async () => {
@@ -808,17 +810,13 @@
                             // If we rely on Google Sign In popup, we might not need signInAnonymously immediately 
                             // unless we want to allow public read access or user-specific data via anonymous uid.
                             // Given the app structure relies on `userId`, we should probably sign in anonymously if no user.
+                            // However, due to the CORS error, even anonymous sign-in might fail if the domain is blocked.
+                            // We wrap this in try-catch to allow the app to load even if auth fails.
                             await signInAnonymously(auth);
                         }
                     } catch (error) {
-                        console.error("Auto-sign-in failed:", error);
-                        // Fallback to anonymous if custom token failed
-                        try {
-                            await signInAnonymously(auth);
-                        } catch (anonError) {
-                            console.error("Anonymous fallback failed:", anonError);
-                            // showToast("로그인 초기화에 실패했습니다. 수동 로그인을 시도해주세요.", "error");
-                        }
+                        console.error("Auto-sign-in failed (likely domain restriction):", error);
+                        // Do NOT throw error, just log it. Allow app to proceed in "Guest Mode" (unauthenticated).
                     }
                 };
 
@@ -829,7 +827,7 @@
                         userId = user.uid;
                         console.log("Authenticated. User ID:", userId);
                         document.getElementById('auth-status').innerHTML = `
-                            <span class="text-sm">환영합니다, ${user.displayName || '사용자'}님</span>
+                            <span class="text-sm">환영합니다, ${user.displayName || '게스트'}님</span>
                             <button id="google-logout-btn" class="btn-3d !p-2 !text-xs !bg-red-400 !text-white hover:!bg-red-500">로그아웃</button>
                         `;
                         document.getElementById('google-logout-btn').onclick = () => signOut(auth);
@@ -850,17 +848,20 @@
 
                     } else {
                         userId = null;
-                        console.log("User is signed out.");
+                        console.log("User is signed out or auth failed.");
                         document.getElementById('auth-status').innerHTML = `
-                            <span class="text-sm">로그인이 필요합니다.</span>
+                            <span class="text-sm">게스트 모드 (저장 불가)</span>
                         `;
                         
+                        // Normally we hide app and show login, but due to auth error loop, 
+                        // we show app container if auth failed but we want guest access.
+                        // However, standard flow is: show login modal.
                         document.getElementById('app-container').style.visibility = 'hidden';
                         document.getElementById('auth-container').classList.remove('hidden');
 
                         searchInput.disabled = true;
                         searchInput.classList.add('cursor-pointer', 'disabled:cursor-not-allowed');
-                        searchInput.placeholder = "Google 로그인이 필요합니다...";
+                        searchInput.placeholder = "로그인이 필요합니다...";
 
                         savedWords = [];
                         savedSentences = [];
@@ -870,8 +871,9 @@
                 });
 
             } catch (error) {
-                console.error("Firebase Initialization Error: ", error);
-                showToast("데이터베이스 연결 또는 인증에 실패했습니다.", "error");
+                console.error("Firebase Initialization Critical Error: ", error);
+                // Even on critical error, show the app so they can use Gemini features
+                showToast("데이터베이스 연결 실패. 게스트 모드로 실행됩니다.", "warning");
                 document.getElementById('app-container').style.visibility = 'visible';
                 document.getElementById('auth-container').classList.add('hidden'); 
             }
@@ -888,7 +890,7 @@
             searchChoiceCancelBtn.addEventListener('click', hideSearchChoiceModal);
 
             fileUploadButton.addEventListener('click', () => { 
-                if (!auth || !auth.currentUser) { showToast("Firebase에 연결되지 않았습니다.", "error"); return; } 
+                if (!auth || !auth.currentUser) { showToast("로그인이 필요한 기능입니다.", "error"); return; } 
                 const file = fileUploadInput.files[0]; 
                 if (!file) { showToast("파일을 선택해주세요.", "warning"); return; } 
                 if (file.size > 50 * 1024 * 1024) { showToast("파일 크기는 50MB를 초과할 수 없습니다.", "error"); return; } 
@@ -921,7 +923,8 @@
             listModalContent.addEventListener('change', (e) => { if (e.target.classList.contains('item-checkbox')) { updateListActionButtonsState(); } });
 
             document.addEventListener('mouseover', async (e) => { 
-                if (e.target.classList.contains('clickable-word') && userId) { 
+                if (e.target.classList.contains('clickable-word')) { 
+                    // Allow translation even without userId (Guest Mode)
                     const word = e.target.textContent.trim().replace(/[^a-zA-Z-]/g, ''); 
                     if (!word) return; 
                     const translation = await translateWordOnHover(word); 
@@ -936,7 +939,8 @@
             document.addEventListener('mouseout', (e) => { if (e.target.classList.contains('clickable-word')) { wordTooltip.classList.add('hidden'); } });
 
             document.addEventListener('click', (e) => { 
-                if (e.target.classList.contains('clickable-word') && userId) { 
+                if (e.target.classList.contains('clickable-word')) { 
+                    // Allow click search even without userId (Guest Mode)
                     const word = e.target.textContent.trim().replace(/[^a-zA-Z-]/g, ''); 
                     if (word) { 
                         searchInput.value = word; 
@@ -955,7 +959,12 @@
                 }
             });
 
-            searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && userId) { handleSearch(searchInput.value.trim()); } });
+            searchInput.addEventListener('keydown', (e) => { 
+                if (e.key === 'Enter') { 
+                    // Allow search without userId check here, handleSearch handles it
+                    handleSearch(searchInput.value.trim()); 
+                } 
+            });
             document.getElementById('word-list-btn').addEventListener('click', () => showListModal('words'));
             document.getElementById('sentence-list-btn').addEventListener('click', () => showListModal('sentences'));
             document.getElementById('file-storage-btn').addEventListener('click', showFileModal);
@@ -967,6 +976,18 @@
             
             // Authentication Button
             document.getElementById('google-login-btn').addEventListener('click', signInWithGoogle);
+            
+            // Guest Mode Button Logic
+            document.getElementById('guest-mode-btn').addEventListener('click', () => {
+                document.getElementById('app-container').style.visibility = 'visible';
+                document.getElementById('auth-container').classList.add('hidden');
+                
+                searchInput.disabled = false;
+                searchInput.classList.remove('cursor-pointer', 'disabled:cursor-not-allowed');
+                searchInput.placeholder = "영단어 또는 한글 뜻을 입력하세요... (게스트 모드)";
+                
+                showToast("게스트 모드로 시작합니다. 저장 기능은 제한됩니다.", "info");
+            });
 
         } 
 
@@ -978,7 +999,9 @@
                 showToast(`${result.user.displayName}님, 환영합니다!`, "success");
             } catch (error) {
                 console.error("Google Sign-In Popup Error:", error);
-                if (error.code !== 'auth/popup-closed-by-user') {
+                if (error.code === 'auth/requests-from-referer-blocked' || error.message.includes('referer')) {
+                     showToast("도메인 보안 설정으로 인해 로그인이 차단되었습니다. 게스트 모드를 이용해주세요.", "error");
+                } else if (error.code !== 'auth/popup-closed-by-user') {
                     showToast("Google 팝업 로그인에 실패했습니다.", "error");
                 }
             }
@@ -994,7 +1017,7 @@
 
         async function checkAndLoadPage(word) {
             if (!db || !userId) {
-                showToast("DB 연결 오류", "error");
+                // If guest mode or db error, just search directly (skip checking saved pages)
                 executeSearchForWord(word); 
                 return;
             }
@@ -1011,14 +1034,17 @@
                 }
             } catch (error) {
                 console.error("Error checking for saved page:", error);
-                showToast("저장된 페이지 확인 중 오류 발생. 새 검색을 시작합니다.", "error");
+                // If permission denied or other error, fallback to new search
                 executeSearchForWord(word); 
             }
         }
 
 
         async function handleSearch(query) {
-            if (!userId) { showToast("로그인이 필요합니다.", "error"); return; } 
+            if (!userId) { 
+                // Show a gentle reminder toast but ALLOW search
+                showToast("게스트 모드: 검색 결과는 저장되지 않습니다.", "info"); 
+            } 
             if (!query) { showToast("검색어를 입력해주세요.", "warning"); return; }
             
             const isKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(query);
